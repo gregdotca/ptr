@@ -6,7 +6,7 @@ from time import sleep
 
 app = Flask(__name__, static_folder="assets")
 
-APP_TITLE = "ptr"
+APP_TITLE = "PTR Record Lookup"
 DEFAULT_ADDRESS = "8.8.8.8"
 
 
