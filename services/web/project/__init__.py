@@ -46,7 +46,7 @@ def get_ptr(address):
 
     try:
 
-        ptr_lookup_result = socket.getnameinfo((address, 0), 0)[0]
+        ptr_lookup_result = address + ' -> ' + socket.getnameinfo((address, 0), 0)[0]
 
     except Exception:
 
