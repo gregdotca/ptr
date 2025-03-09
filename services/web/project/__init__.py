@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import socket
-
 from flask import Flask, redirect, render_template, request
 from time import sleep
 
@@ -50,7 +49,7 @@ def get_ptr(address):
 
     except Exception:
 
-        ptr_lookup_result = "Error: Unable to lookup PTR record"
+        ptr_lookup_result = "Unable to lookup PTR record"
 
     return ptr_lookup_result
 
