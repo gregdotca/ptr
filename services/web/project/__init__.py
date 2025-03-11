@@ -9,26 +9,24 @@ APP_TITLE = "PTR Record Lookup"
 DEFAULT_ADDRESS = "8.8.8.8"
 
 
-@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET", "POST"])
 def home():
-    return redirect("/" + DEFAULT_ADDRESS, code=302)
+    if request.method == "GET":
+        return redirect("/" + DEFAULT_ADDRESS)
+    else:
+        sleep(0.25)
+
+        if str(request.form["address"]) == "":
+            full_url = DEFAULT_ADDRESS
+        else:
+            full_url = str(request.form["address"])
+
+        return redirect(full_url)
 
 
 @app.route("/<address>", methods=["GET"])
 def lookup_get(address):
     return display_homepage(address, get_ptr(address))
-
-
-@app.route("/", methods=["POST"])
-def lookup_post():
-    sleep(0.25)
-
-    if str(request.form["address"]) == "":
-        full_url = DEFAULT_ADDRESS
-    else:
-        full_url = str(request.form["address"])
-
-    return redirect(full_url, code=302)
 
 
 def display_homepage(address, page_body):
