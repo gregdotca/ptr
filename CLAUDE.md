@@ -14,7 +14,7 @@ Production (the tracked setup):
 docker-compose up -d --build     # serves on 10.0.0.3:8101 -> container :5000
 ```
 
-The gunicorn command has `--no-control-socket` because ptr doesn't use gunicorn's `gunicornc` control tool, and the `app` user can't create its default socket in `/home/app/.gunicorn`.
+The gunicorn command has `--no-control-socket` because ptr doesn't use gunicorn's `gunicornc` control tool, and the `app` user can't create its default socket in `/home/app/.gunicorn`. It runs `--workers 2 --threads 4` (gunicorn's threaded `gthread` worker), so one slow reverse lookup or the 0.25s POST delay doesn't block everyone else; with gunicorn's default single sync worker, requests were handled one at a time.
 
 Local development without Docker (from `services/web/`; needs the Tailwind standalone CLI on the host to build the CSS):
 

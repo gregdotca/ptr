@@ -2,6 +2,15 @@
 
 ## 2026-10-11
 
+- Run gunicorn with 2 workers and 4 threads each. It used gunicorn's
+  default of one sync worker, which handles one request at a time, and
+  `getnameinfo()` has no timeout of its own. A lookup for an address
+  with a slow reverse zone, or the 0.25s spinner delay on every POST,
+  made every other visitor wait. In a test container, 8 simultaneous
+  POSTs took 2.01s before and 0.51s after.
+  - `docker-compose.yml:8`: add `--workers 2 --threads 4` to the
+    gunicorn command.
+  - `CLAUDE.md`: updated to match.
 - Fix lookups for addresses with no PTR record. They showed the address
   as its own hostname (`192.0.2.1 -> 192.0.2.1`), as if the lookup had
   worked. `socket.getnameinfo()` was called with no flags, and in that
