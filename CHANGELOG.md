@@ -2,6 +2,15 @@
 
 ## 2026-10-12
 
+- Upgrade Python from 3.14.7 to 3.14.8 (`python:3.14.8-slim`).
+  3.14.8 is an expedited security release (fixes for SSL and tarfile
+  bugs, among others). Tested in the production image: flake8 and all
+  17 tests pass during the build, and real lookups work (`1.1.1.1`
+  and `8.8.8.8` return their PTR names, and a non-IP input gets
+  "Invalid IP address"). The locally excluded `Dockerfile.DEV` isn't
+  in the repo; it was moved to 3.14.8 by hand to match.
+  - `services/web/Dockerfile:6,56`: both stages use the new image.
+  - `CLAUDE.md:72`: the pinned stack now says 3.14.8-slim.
 - Add Dependabot version updates. Dependabot alerts and security fix
   PRs (set in the GitHub repo's settings, not in this file) only cover
   known vulnerabilities; nothing kept the pinned packages or the

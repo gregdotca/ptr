@@ -69,4 +69,4 @@ Dark mode is automatic only, with no toggle, JavaScript, or `data-theme` attribu
 
 `templates/custom.headers` is gitignored and optionally included (`ignore missing`) in `<head>`. It's for per-deployment additions such as analytics.
 
-The stack is pinned: Python 3.14.7-slim (both Dockerfiles), Flask 3.1.3, Werkzeug 3.1.9, gunicorn 26.2.0, flake8 7.4.1, pytest 9.1.1 (dev only), Tailwind 4.3.3, and daisyUI 5.7.46. The builder stage makes wheels with `--no-deps`, so only the packages in `requirements.txt` are pinned; Flask's other dependencies are resolved when the final stage installs the wheels.
+The stack is pinned: Python 3.14.8-slim (both Dockerfiles), Flask 3.1.3, Werkzeug 3.1.9, gunicorn 26.2.0, flake8 7.4.1, pytest 9.1.1 (dev only), Tailwind 4.3.3, and daisyUI 5.7.46. The builder stage makes wheels with `--no-deps`, so only the packages in `requirements.txt` are pinned; Flask's other dependencies are resolved when the final stage installs the wheels.
