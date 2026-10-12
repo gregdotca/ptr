@@ -2,6 +2,24 @@
 
 ## 2026-10-11
 
+- Update Python from 3.9 to 3.14, Flask from 2.3.0 to 3.1.3, gunicorn
+  from 20.1.0 to 26.2.0, and flake8 from 7.1.2 to 7.4.1, and pin
+  Werkzeug to 3.1.9. Python 3.9 reached end of life in October 2025,
+  so it no longer gets security fixes. gunicorn 20.1.0 has a
+  request-smuggling vulnerability (CVE-2024-1135, fixed in 22.0.0).
+  Werkzeug wasn't pinned, so each build installed whatever version was
+  newest. gunicorn 26 also adds a control socket for its `gunicornc`
+  tool, which ptr doesn't use; gunicorn tried to create it in
+  `/home/app/.gunicorn`, which the `app` user can't write to, and
+  logged a `Permission denied` error on every start, so it's now
+  turned off with `--no-control-socket`.
+  - `services/web/requirements.txt`: new Flask and gunicorn versions,
+    and pin Werkzeug.
+  - `services/web/Dockerfile:6,35,52`: `python:3.14.7-slim` for both
+    stages, and flake8 7.4.1.
+  - `docker-compose.yml:8`: add `--no-control-socket` to the gunicorn
+    command.
+  - `CLAUDE.md`: note the control socket setting and the new versions.
 - Add `<!doctype html>`, `lang="en"`, and a viewport meta tag to the
   page, and remove three classes that did nothing. Without a doctype
   the browser rendered the page in quirks mode, which Tailwind's base

@@ -14,6 +14,8 @@ Production (the tracked setup):
 docker-compose up -d --build     # serves on 10.0.0.3:8101 -> container :5000
 ```
 
+The gunicorn command has `--no-control-socket` because ptr doesn't use gunicorn's `gunicornc` control tool, and the `app` user can't create its default socket in `/home/app/.gunicorn`.
+
 Local development without Docker (from `services/web/`; needs the Tailwind standalone CLI on the host to build the CSS):
 
 ```sh
@@ -54,4 +56,4 @@ Dark mode is automatic only, with no toggle, JavaScript, or `data-theme` attribu
 
 `templates/custom.headers` is gitignored and optionally included (`ignore missing`) in `<head>`. It's for per-deployment additions such as analytics.
 
-The stack is pinned: Python 3.9.21-slim, Flask 2.3.0, gunicorn 20.1.0, flake8 7.1.2, Tailwind 4.3.3, and daisyUI 5.7.46.
+The stack is pinned: Python 3.14.7-slim (both Dockerfiles), Flask 3.1.3, Werkzeug 3.1.9, gunicorn 26.2.0, flake8 7.4.1, Tailwind 4.3.3, and daisyUI 5.7.46. The builder stage makes wheels with `--no-deps`, so only the packages in `requirements.txt` are pinned; Flask's other dependencies are resolved when the final stage installs the wheels.
