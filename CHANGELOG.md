@@ -2,6 +2,16 @@
 
 ## 2026-10-11
 
+- Add `<!doctype html>`, `lang="en"`, and a viewport meta tag to the
+  page, and remove three classes that did nothing. Without a doctype
+  the browser rendered the page in quirks mode, which Tailwind's base
+  styles don't expect; without `lang` screen readers had to guess the
+  language; and without a viewport tag phones showed a zoomed-out
+  desktop layout. `form` and `loading-circle` aren't daisyUI classes
+  and `justify-left` isn't a Tailwind class (it's `justify-start`), so
+  none of them was in the built CSS. Screenshots before and after are
+  identical at desktop width in both light and dark mode. File
+  changed: `services/web/project/templates/home.html:1-5,15-16,22`.
 - Stop rendering the lookup result with `|safe`. It holds the address
   from the URL and a hostname from a PTR record, which whoever runs the
   IP's reverse zone controls, so any HTML that got through would have
