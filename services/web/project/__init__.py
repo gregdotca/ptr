@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import ipaddress
 import socket
 from flask import Flask, redirect, render_template, request, url_for
 from time import sleep
@@ -16,7 +17,7 @@ def home():
     else:
         sleep(0.25)
 
-        address = str(request.form["address"]) or DEFAULT_ADDRESS
+        address = request.form.get("address", "") or DEFAULT_ADDRESS
 
         # url_for() encodes the value, so the redirect always stays on this site
         return redirect(url_for("lookup_get", address=address))
@@ -41,13 +42,30 @@ def get_ptr(address):
 
     try:
 
-        ptr_lookup_result = address + ' -> ' + socket.getnameinfo((address, 0), 0)[0]
+        ipaddress.ip_address(address)
 
-    except Exception:
+    except ValueError:
 
-        ptr_lookup_result = "Unable to lookup PTR record"
+        return "Invalid IP address"
 
-    return ptr_lookup_result
+    try:
+
+        # NI_NAMEREQD makes getnameinfo() raise when there's no PTR record,
+        # instead of returning the address as if it were the hostname
+        hostname = socket.getnameinfo((address, 0), socket.NI_NAMEREQD)[0]
+
+    except socket.gaierror as e:
+
+        if e.errno == socket.EAI_NONAME:
+            return "No PTR record found for " + address
+
+        return "Unable to lookup PTR record"
+
+    except OSError:
+
+        return "Unable to lookup PTR record"
+
+    return address + ' -> ' + hostname
 
 
 if __name__ == "__main__":

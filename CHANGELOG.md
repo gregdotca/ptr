@@ -2,6 +2,36 @@
 
 ## 2026-10-11
 
+- Fix lookups for addresses with no PTR record. They showed the address
+  as its own hostname (`192.0.2.1 -> 192.0.2.1`), as if the lookup had
+  worked. `socket.getnameinfo()` was called with no flags, and in that
+  case it falls back to returning the numeric address. It now passes
+  `NI_NAMEREQD`, so a missing record raises an error and the page says
+  "No PTR record found for <address>". Other lookup errors, such as a
+  DNS timeout, still say "Unable to lookup PTR record".
+  - `services/web/project/__init__.py:39-68`: `get_ptr()` checks the
+    address with `ipaddress.ip_address()` first, so a hostname or other
+    non-IP input now gets "Invalid IP address" instead of the generic
+    error, and the bare `except Exception` is narrowed to `OSError`.
+- Stop a form POST without an `address` field from returning a 400 Bad
+  Request. `request.form["address"]` raised a `KeyError`; it now uses
+  `request.form.get()` and falls back to the default address
+  (`services/web/project/__init__.py:20`).
+- Add a `healthcheck` to `docker-compose.yml` (lines 12-16). It checks
+  that `GET /` returns its 302 redirect, without following it, so the
+  health status doesn't depend on DNS.
+- Add a pytest suite in `services/web/tests/test_app.py` covering the
+  redirects, the redirect staying on this site, escaping of the lookup
+  result, missing PTR records, lookup errors, and invalid addresses.
+  `getnameinfo()` is replaced with a fake, so the tests don't need the
+  network. pytest 9.1.1 is pinned in the new
+  `services/web/requirements-dev.txt`, and both are listed in
+  `services/web/.dockerignore` to keep them out of the image.
+  `CLAUDE.md` is updated to match.
+- Update the AI Code Rating from B2b to B3b in `ACR.md` and the
+  `README.md` badge. With the tests counted as code, about 60% of the
+  non-blank code lines (155 of 256) now come from AI-assisted work, up
+  from about 35%, which moves AI Share from 26-50% to 51-75%.
 - Remove jQuery. It was only used to show the loading spinner, so every
   page loaded 87 KB of JavaScript for one `onclick`. The Lookup button
   now sets the spinner's `display` to `block` directly, which is what

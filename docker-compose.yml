@@ -9,6 +9,11 @@ services:
     ports:
       - 10.0.0.3:8101:5000
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import http.client; c = http.client.HTTPConnection('localhost', 5000, timeout=5); c.request('GET', '/'); raise SystemExit(c.getresponse().status != 302)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     environment:
       - FLASK_APP=project/__init__.py
       - FLASK_ENV=production
