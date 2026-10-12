@@ -2,6 +2,9 @@
 
 ## 2026-10-11
 
+- Fix the install URL in `README.md` to `http://IP_ADDRESS:8101`. It
+  said `https://`, but gunicorn serves plain HTTP on that port, so the
+  documented URL failed with a TLS error.
 - Add `aria-label="Address"` to the address input in
   `services/web/project/templates/home.html`. It only had a
   placeholder, which screen readers don't reliably announce as a

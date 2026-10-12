@@ -9,7 +9,7 @@ https://ptr.greg.ca
 
 - Clone the repository
 - Run "docker-compose up -d"
-- Load https://IP_ADDRESS:8101 in your web browser
+- Load http://IP_ADDRESS:8101 in your web browser
 
 ## License
 
