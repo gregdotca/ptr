@@ -8,6 +8,7 @@ app = Flask(__name__, static_folder="assets")
 
 APP_TITLE = "PTR Record Lookup"
 DEFAULT_ADDRESS = "8.8.8.8"
+INVALID_ADDRESS = "Invalid IP address"
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -25,6 +26,11 @@ def home():
 
 @app.route("/<address>", methods=["GET"])
 def lookup_get(address):
+    # A 404 tells crawlers and bots probing paths like /robots.txt that
+    # there's nothing here, while people still see the normal page
+    if not is_ip_address(address):
+        return display_homepage(address, INVALID_ADDRESS), 404
+
     return display_homepage(address, get_ptr(address))
 
 
@@ -37,16 +43,23 @@ def display_homepage(address, page_body):
     )
 
 
-def get_ptr(address):
-    address = address or DEFAULT_ADDRESS
-
+def is_ip_address(address):
     try:
 
         ipaddress.ip_address(address)
 
     except ValueError:
 
-        return "Invalid IP address"
+        return False
+
+    return True
+
+
+def get_ptr(address):
+    address = address or DEFAULT_ADDRESS
+
+    if not is_ip_address(address):
+        return INVALID_ADDRESS
 
     try:
 

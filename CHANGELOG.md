@@ -2,6 +2,28 @@
 
 ## 2026-10-11
 
+- Return a 404 for any path that isn't an IP address. Paths like
+  `/robots.txt`, `/favicon.ico`, or `/wp-login.php` got a normal 200
+  page saying "Invalid IP address", so crawlers and bots treated each
+  one as a real page. They now get the same page with a 404 status.
+  An address with no PTR record is still a 200, since that's a valid
+  lookup with a negative answer.
+  - `services/web/project/__init__.py:28-34,46-55`: `lookup_get()`
+    checks the address with the new `is_ip_address()` before the
+    lookup, and `get_ptr()` uses it too.
+  - `services/web/tests/test_app.py`: check the 404 status, including
+    `/robots.txt` and `/favicon.ico`, and the 200 for a missing record.
+- Run the tests during the Docker build. The builder stage already ran
+  flake8, but the tests only ran when someone ran them by hand, so a
+  broken lookup could still be built and deployed.
+  - `services/web/Dockerfile:39-41`: install `requirements-dev.txt`
+    and run `python -m pytest` after the lint.
+  - `services/web/Dockerfile:75-77`: the final stage copies only
+    `manage.py` and `project/` instead of the whole build context, so
+    the tests and `requirements-dev.txt` stay out of the image.
+  - `services/web/.dockerignore`: no longer excludes `tests/` and
+    `requirements-dev.txt`, since the builder stage needs them.
+  - `CLAUDE.md`: updated to match.
 - Run gunicorn with 2 workers and 4 threads each. It used gunicorn's
   default of one sync worker, which handles one request at a time, and
   `getnameinfo()` has no timeout of its own. A lookup for an address

@@ -30,14 +30,14 @@ Lint (the production image runs this in its builder stage, so a lint failure bre
 flake8 --ignore=E501,W503,F401 services/web
 ```
 
-Tests (from `services/web/`; pytest is in `requirements-dev.txt`, which isn't installed in the image):
+Tests (from `services/web/`; pytest is in `requirements-dev.txt`). The production image also runs these in its builder stage, right after the lint, so a failing test breaks `docker-compose build` too:
 
 ```sh
 pip install -r requirements-dev.txt
 python -m pytest
 ```
 
-The tests in `services/web/tests/` replace `socket.getnameinfo` with a fake, so they don't need the network, and skip the 0.25s spinner delay. `tests/` and `requirements-dev.txt` are in `.dockerignore`, so they stay out of the image and the build's flake8 step doesn't lint them; the lint command above does. `test.py` in the root is an untracked scratch script for redirect-chain checks, not part of the suite.
+The tests in `services/web/tests/` replace `socket.getnameinfo` with a fake, so they don't need the network, and skip the 0.25s spinner delay. The builder stage installs `requirements-dev.txt` to run them. The final stage copies only `manage.py` and `project/`, so the tests, pytest, and `requirements-dev.txt` stay out of the production image. `test.py` in the root is an untracked scratch script for redirect-chain checks, not part of the suite.
 
 The compose file has a `healthcheck` that expects `GET /` to return a 302. It doesn't follow the redirect, so it doesn't depend on DNS. `restart: unless-stopped` doesn't restart a container that's only unhealthy; the status is for `docker ps` and monitoring.
 
@@ -53,13 +53,13 @@ All app logic is in `services/web/project/__init__.py`; `manage.py` only wraps `
 
 - `GET /` redirects to `/8.8.8.8` (`DEFAULT_ADDRESS`).
 - `POST /` takes the form's `address` field (an empty field falls back to `DEFAULT_ADDRESS`) and redirects to `/<address>` after a 0.25s sleep, so the loading spinner shows. The redirect is built with `url_for`, which encodes the value, so a typed address like `https://example.com` can't send the visitor to another site. Lookups are always rendered from the GET URL, which keeps results linkable.
-- `GET /<address>` calls `get_ptr()`, which checks the address with `ipaddress.ip_address()` (so hostnames get "Invalid IP address"), then calls `socket.getnameinfo()` with `NI_NAMEREQD` and returns `"<address> -> <hostname>"`, "No PTR record found for <address>" (`EAI_NONAME`), or "Unable to lookup PTR record" (any other lookup error). Keep `NI_NAMEREQD`: without it, `getnameinfo()` returns the address itself when there's no PTR record, which looks like a successful lookup.
+- `GET /<address>` checks the address with `is_ip_address()` (`ipaddress.ip_address()`). Anything that isn't an IP address, such as a hostname or a path like `/robots.txt`, gets the normal page with "Invalid IP address" and a 404 status, so crawlers and bots don't treat it as a real page. Otherwise it calls `get_ptr()`, which calls `socket.getnameinfo()` with `NI_NAMEREQD` and returns `"<address> -> <hostname>"`, "No PTR record found for <address>" (`EAI_NONAME`), or "Unable to lookup PTR record" (any other lookup error). Keep `NI_NAMEREQD`: without it, `getnameinfo()` returns the address itself when there's no PTR record, which looks like a successful lookup.
 
 There's a single template, `templates/home.html`. The lookup result (`page_body`) is a plain string and is autoescaped like every other value. Never add `|safe`: the result includes the address from the URL and a hostname from a PTR record, and whoever controls the IP's reverse zone controls that record.
 
 Static files are served from `project/assets/` at `/assets/...` (Flask's `static_folder`, so use `url_for('static', ...)`). The favicon is vendored there. There's no JavaScript library: the Lookup button's inline `onclick` shows the loading spinner.
 
-`services/web/.dockerignore` keeps `__pycache__`, the Dockerfiles, the tests, `requirements-dev.txt`, and a locally built `project/assets/app.css` out of the image. Don't add `project/templates/custom.headers` to it: production builds need that file in the image.
+`services/web/.dockerignore` keeps `__pycache__`, the Dockerfiles, and a locally built `project/assets/app.css` out of the image. Don't add `project/templates/custom.headers` to it: production builds need that file in the image.
 
 Tailwind 4 and daisyUI 5 are built at Docker build time, not loaded from a CDN. In the Dockerfile's builder stage, the Tailwind standalone CLI (version and per-architecture SHA-256s pinned as `ARG`s) compiles `project/styles/app.css` into `project/assets/app.css`, which is gitignored; the final stage copies the built file in after the project. `app.css` uses `source(none)` with `@source "../templates"`, so only the templates are scanned: a class used only from Python or JS won't be in the build unless it also appears in a template. daisyUI is the vendored plugin `project/styles/daisyui-<version>.mjs`, with only the `bumblebee` (light) and `business` (dark) themes enabled. To upgrade either one, update the `ARG`s in both `Dockerfile` and `Dockerfile.DEV`, or replace the `.mjs` file and its reference in `app.css`.
 

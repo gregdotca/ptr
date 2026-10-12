@@ -86,6 +86,7 @@ def test_lookup_without_ptr_record(client, monkeypatch):
 
     response = client.get("/192.0.2.1")
 
+    assert response.status_code == 200
     assert b"No PTR record found for 192.0.2.1" in response.data
     assert b"192.0.2.1 -&gt;" not in response.data
 
@@ -100,12 +101,19 @@ def test_lookup_failure(client, monkeypatch):
     assert b"Unable to lookup PTR record" in response.data
 
 
-@pytest.mark.parametrize("address", ["example.com", "999.1.1.1", "not an ip"])
+@pytest.mark.parametrize("address", [
+    "example.com",
+    "999.1.1.1",
+    "not an ip",
+    "robots.txt",
+    "favicon.ico",
+])
 def test_lookup_rejects_invalid_address(client, monkeypatch, address):
     getnameinfo = fake_getnameinfo("unused")
     monkeypatch.setattr(project.socket, "getnameinfo", getnameinfo)
 
     response = client.get("/" + address)
 
+    assert response.status_code == 404
     assert b"Invalid IP address" in response.data
     assert getnameinfo.calls == []

@@ -5,5 +5,3 @@ __pycache__/
 Dockerfile*
 .dockerignore
 project/assets/app.css
-tests/
-requirements-dev.txt

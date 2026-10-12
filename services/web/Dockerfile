@@ -36,6 +36,10 @@ RUN pip install flake8==7.4.1
 COPY . .
 RUN flake8 --ignore=E501,W503,F401 .
 
+# test
+RUN pip install -r requirements-dev.txt
+RUN python -m pytest
+
 # build css
 RUN tailwindcss -i project/styles/app.css -o project/assets/app.css --minify
 
@@ -68,8 +72,9 @@ COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 
-# copy project
-COPY . $APP_HOME
+# copy project (only what the app needs, not the tests)
+COPY manage.py $APP_HOME/
+COPY project $APP_HOME/project
 COPY --from=builder /usr/src/app/project/assets/app.css $APP_HOME/project/assets/app.css
 
 # chown all the files to the app user
