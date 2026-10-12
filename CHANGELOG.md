@@ -2,6 +2,11 @@
 
 ## 2026-10-11
 
+- Add `ACR.md` with an [AI Code Rating](https://aicoderating.com/) of
+  B2b (Experienced maintainer, 26-50% AI-written code, Reviewed), and
+  its badge under the title in `README.md`. About 35% of the
+  non-blank code lines (57 of 163, not counting docs, the vendored
+  daisyUI plugin, or jQuery) come from AI-assisted commits.
 - Update Python from 3.9 to 3.14, Flask from 2.3.0 to 3.1.3, gunicorn
   from 20.1.0 to 26.2.0, and flake8 from 7.1.2 to 7.4.1, and pin
   Werkzeug to 3.1.9. Python 3.9 reached end of life in October 2025,
