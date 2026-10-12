@@ -2,6 +2,12 @@
 
 ## 2026-10-11
 
+- Stop rendering the lookup result with `|safe`. It holds the address
+  from the URL and a hostname from a PTR record, which whoever runs the
+  IP's reverse zone controls, so any HTML that got through would have
+  run on the page. The result is now autoescaped like every other
+  value; it looks the same (`->` is escaped as `-&gt;`). Files changed:
+  `services/web/project/templates/home.html:22`, and `CLAUDE.md`.
 - Fix an open redirect in the lookup form. `POST /` passed the typed
   address straight to `redirect()`, so an address of
   `https://evil.com` or `//evil.com` sent the visitor to another site.

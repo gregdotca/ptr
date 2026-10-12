@@ -44,7 +44,7 @@ All app logic is in `services/web/project/__init__.py`; `manage.py` only wraps `
 - `POST /` takes the form's `address` field (an empty field falls back to `DEFAULT_ADDRESS`) and redirects to `/<address>` after a 0.25s sleep, so the loading spinner shows. The redirect is built with `url_for`, which encodes the value, so a typed address like `https://example.com` can't send the visitor to another site. Lookups are always rendered from the GET URL, which keeps results linkable.
 - `GET /<address>` calls `get_ptr()`, which uses `socket.getnameinfo()` and returns either `"<address> -> <hostname>"` or a fixed error string.
 
-There's a single template, `templates/home.html`. It renders the result through `{{ page_body|safe }}`, so anything passed as `page_body` isn't escaped. Escape user-influenced input before it reaches that variable.
+There's a single template, `templates/home.html`. The lookup result (`page_body`) is a plain string and is autoescaped like every other value. Never add `|safe`: the result includes the address from the URL and a hostname from a PTR record, and whoever controls the IP's reverse zone controls that record.
 
 Static files are served from `project/assets/` at `/assets/...` (Flask's `static_folder`, so use `url_for('static', ...)`). jQuery and the favicon are vendored there.
 
