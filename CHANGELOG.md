@@ -2,6 +2,20 @@
 
 ## 2026-10-11
 
+- Add automatic dark mode that follows the visitor's system setting,
+  with no toggle or JavaScript. The page was locked to the light
+  `bumblebee` theme by `data-theme` on `<html>`.
+  - `services/web/project/styles/app.css`: enable daisyUI's `business`
+    theme for `prefers-color-scheme: dark`, and override its primary
+    colour with a darker navy (`oklch(34% .085 251.473)`; text on the
+    button 8.30:1) and its corner radii with `bumblebee`'s, so the
+    corners match the light theme.
+  - `services/web/project/templates/home.html`: remove `data-theme`,
+    add a `color-scheme` meta tag, and make the Lookup button use the
+    primary colour in dark mode (`dark:btn-primary`) instead of
+    `business`'s orange accent.
+  - `CLAUDE.md`: document how dark mode works.
+
 - Build Tailwind 4.3.3 and daisyUI 5.7.46 CSS at Docker build time
   instead of loading them from jsDelivr. The page used the in-browser
   Tailwind compiler, a floating `daisyui@5` tag, and a separate themes
