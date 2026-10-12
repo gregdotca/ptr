@@ -2,6 +2,20 @@
 
 ## 2026-10-11
 
+- Remove jQuery. It was only used to show the loading spinner, so every
+  page loaded 87 KB of JavaScript for one `onclick`. The Lookup button
+  now sets the spinner's `display` to `block` directly, which is what
+  jQuery's `.show()` did.
+  - `services/web/project/templates/home.html`: drop the jQuery
+    `<script>` tag (old line 8) and use `document.getElementById` in
+    the button's `onclick` (line 18).
+  - `services/web/project/assets/jquery-3.7.1.min.js`: deleted.
+  - `CLAUDE.md` and `ACR.md`: updated to match.
+- Add `services/web/.dockerignore`. `COPY . .` copied everything in
+  `services/web/` into the image, including `__pycache__` and a
+  root-owned `project/assets/app.css` left by the dev watcher. They're
+  now excluded, along with the Dockerfiles. `custom.headers` is
+  deliberately not excluded, since production needs it.
 - Add `ACR.md` with an [AI Code Rating](https://aicoderating.com/) of
   B2b (Experienced maintainer, 26-50% AI-written code, Reviewed), and
   its badge under the title in `README.md`. About 35% of the

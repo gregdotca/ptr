@@ -48,7 +48,9 @@ All app logic is in `services/web/project/__init__.py`; `manage.py` only wraps `
 
 There's a single template, `templates/home.html`. The lookup result (`page_body`) is a plain string and is autoescaped like every other value. Never add `|safe`: the result includes the address from the URL and a hostname from a PTR record, and whoever controls the IP's reverse zone controls that record.
 
-Static files are served from `project/assets/` at `/assets/...` (Flask's `static_folder`, so use `url_for('static', ...)`). jQuery and the favicon are vendored there.
+Static files are served from `project/assets/` at `/assets/...` (Flask's `static_folder`, so use `url_for('static', ...)`). The favicon is vendored there. There's no JavaScript library: the Lookup button's inline `onclick` shows the loading spinner.
+
+`services/web/.dockerignore` keeps `__pycache__`, the Dockerfiles, and a locally built `project/assets/app.css` out of the image. Don't add `project/templates/custom.headers` to it: production builds need that file in the image.
 
 Tailwind 4 and daisyUI 5 are built at Docker build time, not loaded from a CDN. In the Dockerfile's builder stage, the Tailwind standalone CLI (version and per-architecture SHA-256s pinned as `ARG`s) compiles `project/styles/app.css` into `project/assets/app.css`, which is gitignored; the final stage copies the built file in after the project. `app.css` uses `source(none)` with `@source "../templates"`, so only the templates are scanned: a class used only from Python or JS won't be in the build unless it also appears in a template. daisyUI is the vendored plugin `project/styles/daisyui-<version>.mjs`, with only the `bumblebee` (light) and `business` (dark) themes enabled. To upgrade either one, update the `ARG`s in both `Dockerfile` and `Dockerfile.DEV`, or replace the `.mjs` file and its reference in `app.css`.
 

@@ -1,0 +1,7 @@
+# Keep local build and dev leftovers out of the image. Don't add
+# project/templates/custom.headers: production needs it in the image.
+__pycache__/
+*.pyc
+Dockerfile*
+.dockerignore
+project/assets/app.css
