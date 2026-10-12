@@ -1,4 +1,6 @@
 import socket
+import threading
+import time
 from urllib.parse import urlsplit
 
 import pytest
@@ -99,6 +101,36 @@ def test_lookup_failure(client, monkeypatch):
     response = client.get("/192.0.2.1")
 
     assert b"Unable to lookup PTR record" in response.data
+
+
+def test_lookup_timeout(client, monkeypatch):
+    started = threading.Event()
+    release = threading.Event()
+    finished = threading.Event()
+
+    def slow_getnameinfo(sockaddr, flags):
+        started.set()
+        release.wait(5)
+        finished.set()
+        return "too.late", "0"
+
+    monkeypatch.setattr(project, "LOOKUP_TIMEOUT", 0.1)
+    monkeypatch.setattr(project.socket, "getnameinfo", slow_getnameinfo)
+
+    try:
+        start = time.monotonic()
+        response = client.get("/192.0.2.1")
+        elapsed = time.monotonic() - start
+    finally:
+        release.set()
+
+    # The lookup was running, not still queued, when the request gave up
+    assert started.is_set()
+    assert finished.wait(5)
+    assert response.status_code == 200
+    assert b"Unable to lookup PTR record" in response.data
+    assert b"too.late" not in response.data
+    assert elapsed < 2
 
 
 @pytest.mark.parametrize("address", [

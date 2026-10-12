@@ -14,6 +14,8 @@ Production (the tracked setup):
 docker-compose up -d --build     # serves on 10.0.0.3:8101 -> container :5000
 ```
 
+The host address comes from `PTR_BIND_ADDRESS` (environment or `.env`) and defaults to `10.0.0.3`, the demo server's address, so the live deployment needs no extra config. The compose file sets no `FLASK_*` variables: gunicorn loads `manage:app` directly, and `FLASK_ENV` no longer exists in Flask 3.
+
 The gunicorn command has `--no-control-socket` because ptr doesn't use gunicorn's `gunicornc` control tool, and the `app` user can't create its default socket in `/home/app/.gunicorn`. It runs `--workers 2 --threads 4` (gunicorn's threaded `gthread` worker), so one slow reverse lookup or the 0.25s POST delay doesn't block everyone else; with gunicorn's default single sync worker, requests were handled one at a time.
 
 Local development without Docker (from `services/web/`; needs the Tailwind standalone CLI on the host to build the CSS):
@@ -53,7 +55,7 @@ All app logic is in `services/web/project/__init__.py`; `manage.py` only wraps `
 
 - `GET /` redirects to `/8.8.8.8` (`DEFAULT_ADDRESS`).
 - `POST /` takes the form's `address` field (an empty field falls back to `DEFAULT_ADDRESS`) and redirects to `/<address>` after a 0.25s sleep, so the loading spinner shows. The redirect is built with `url_for`, which encodes the value, so a typed address like `https://example.com` can't send the visitor to another site. Lookups are always rendered from the GET URL, which keeps results linkable.
-- `GET /<address>` checks the address with `is_ip_address()` (`ipaddress.ip_address()`). Anything that isn't an IP address, such as a hostname or a path like `/robots.txt`, gets the normal page with "Invalid IP address" and a 404 status, so crawlers and bots don't treat it as a real page. Otherwise it calls `get_ptr()`, which calls `socket.getnameinfo()` with `NI_NAMEREQD` and returns `"<address> -> <hostname>"`, "No PTR record found for <address>" (`EAI_NONAME`), or "Unable to lookup PTR record" (any other lookup error). Keep `NI_NAMEREQD`: without it, `getnameinfo()` returns the address itself when there's no PTR record, which looks like a successful lookup.
+- `GET /<address>` checks the address with `is_ip_address()` (`ipaddress.ip_address()`). Anything that isn't an IP address, such as a hostname or a path like `/robots.txt`, gets the normal page with "Invalid IP address" and a 404 status, so crawlers and bots don't treat it as a real page. Otherwise it calls `get_ptr()`, which runs `socket.getnameinfo()` with `NI_NAMEREQD` in the `lookup_pool` thread pool and returns `"<address> -> <hostname>"`, "No PTR record found for <address>" (`EAI_NONAME`), or "Unable to lookup PTR record" (any other lookup error, or no answer within `LOOKUP_TIMEOUT` seconds). `getnameinfo()` has no timeout and can't be cancelled once running, so the pool is what keeps a slow reverse zone from tying up a gunicorn thread; a timed-out lookup keeps its pool thread until the resolver gives up. Tests that fake `getnameinfo` patch `project.socket.getnameinfo`, which the pool looks up at call time. Keep `NI_NAMEREQD`: without it, `getnameinfo()` returns the address itself when there's no PTR record, which looks like a successful lookup.
 
 There's a single template, `templates/home.html`. The lookup result (`page_body`) is a plain string and is autoescaped like every other value. Never add `|safe`: the result includes the address from the URL and a hostname from a PTR record, and whoever controls the IP's reverse zone controls that record.
 

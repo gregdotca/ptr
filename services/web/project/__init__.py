@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import ipaddress
 import socket
+from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, redirect, render_template, request, url_for
 from time import sleep
 
@@ -9,6 +10,13 @@ app = Flask(__name__, static_folder="assets")
 APP_TITLE = "PTR Record Lookup"
 DEFAULT_ADDRESS = "8.8.8.8"
 INVALID_ADDRESS = "Invalid IP address"
+LOOKUP_TIMEOUT = 3
+
+# getnameinfo() has no timeout of its own, so lookups run here and the
+# request stops waiting after LOOKUP_TIMEOUT seconds. A lookup that's
+# still running keeps its pool thread until the resolver gives up, but
+# never holds up a gunicorn thread for longer than the timeout.
+lookup_pool = ThreadPoolExecutor(max_workers=8, thread_name_prefix="ptr-lookup")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -65,7 +73,17 @@ def get_ptr(address):
 
         # NI_NAMEREQD makes getnameinfo() raise when there's no PTR record,
         # instead of returning the address as if it were the hostname
-        hostname = socket.getnameinfo((address, 0), socket.NI_NAMEREQD)[0]
+        lookup = lookup_pool.submit(
+            socket.getnameinfo, (address, 0), socket.NI_NAMEREQD
+        )
+        hostname = lookup.result(timeout=LOOKUP_TIMEOUT)[0]
+
+    except TimeoutError:
+
+        # Drop the lookup if it's still queued behind slow ones
+        lookup.cancel()
+
+        return "Unable to lookup PTR record"
 
     except socket.gaierror as e:
 

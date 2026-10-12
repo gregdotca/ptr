@@ -2,6 +2,36 @@
 
 ## 2026-10-11
 
+- Give up on a PTR lookup after 3 seconds. `getnameinfo()` has no
+  timeout of its own, so an address whose reverse zone answers slowly
+  held a gunicorn thread until the resolver gave up, which can take
+  several seconds per attempt. With only 8 threads (2 workers with 4
+  threads each), a few slow addresses could still back up the site.
+  Lookups now run in a separate thread pool, and the page says "Unable
+  to lookup PTR record" once the deadline passes. A slow lookup still
+  ties up a pool thread until the resolver gives up, but the request's
+  gunicorn thread is free after 3 seconds.
+  - `services/web/project/__init__.py:13-19`: add `LOOKUP_TIMEOUT` and
+    the `lookup_pool` executor.
+  - `services/web/project/__init__.py:76-86`: `get_ptr()` submits the
+    lookup to the pool and waits at most `LOOKUP_TIMEOUT` seconds, then
+    cancels it if it's still queued.
+  - `services/web/tests/test_app.py:106-133`: check that a lookup that
+    never finishes returns the error message quickly.
+- Make the published port's bind address configurable. The compose
+  file bound to `10.0.0.3`, the demo server's address, so following
+  the README's install steps on another machine failed: Docker can't
+  publish a port on an address the host doesn't have.
+  - `docker-compose.yml:10`: bind to `${PTR_BIND_ADDRESS:-10.0.0.3}`,
+    so the demo server keeps working without any changes.
+  - `README.md`: the install steps set `PTR_BIND_ADDRESS` and explain
+    the `10.0.0.3` default.
+- Remove the `FLASK_APP` and `FLASK_ENV` environment variables from
+  `docker-compose.yml`. gunicorn loads `manage:app` directly, so it
+  never read `FLASK_APP`, and Flask 2.3 removed `FLASK_ENV`, so it did
+  nothing on Flask 3.1.
+- Update `CLAUDE.md` to match.
+
 - Return a 404 for any path that isn't an IP address. Paths like
   `/robots.txt`, `/favicon.ico`, or `/wp-login.php` got a normal 200
   page saying "Invalid IP address", so crawlers and bots treated each
