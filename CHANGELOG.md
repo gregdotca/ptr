@@ -2,6 +2,12 @@
 
 ## 2026-10-11
 
+- Fix an open redirect in the lookup form. `POST /` passed the typed
+  address straight to `redirect()`, so an address of
+  `https://evil.com` or `//evil.com` sent the visitor to another site.
+  The redirect is now built with `url_for`, which encodes the value,
+  so it always stays on this site. Files changed:
+  `services/web/project/__init__.py:3,19-22`, and `CLAUDE.md`.
 - Fix the install URL in `README.md` to `http://IP_ADDRESS:8101`. It
   said `https://`, but gunicorn serves plain HTTP on that port, so the
   documented URL failed with a TLS error.

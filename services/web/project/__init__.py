@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import socket
-from flask import Flask, redirect, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
 from time import sleep
 
 app = Flask(__name__, static_folder="assets")
@@ -16,12 +16,10 @@ def home():
     else:
         sleep(0.25)
 
-        if str(request.form["address"]) == "":
-            full_url = DEFAULT_ADDRESS
-        else:
-            full_url = str(request.form["address"])
+        address = str(request.form["address"]) or DEFAULT_ADDRESS
 
-        return redirect(full_url)
+        # url_for() encodes the value, so the redirect always stays on this site
+        return redirect(url_for("lookup_get", address=address))
 
 
 @app.route("/<address>", methods=["GET"])

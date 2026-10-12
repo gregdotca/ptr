@@ -41,7 +41,7 @@ Only the production files are tracked. The dev variants (`docker-compose.DEV.yml
 All app logic is in `services/web/project/__init__.py`; `manage.py` only wraps `app` for the Flask CLI and gunicorn (`manage:app`).
 
 - `GET /` redirects to `/8.8.8.8` (`DEFAULT_ADDRESS`).
-- `POST /` takes the form's `address` field and passes it unchanged to `redirect()` as a relative URL (after a 0.25s sleep, so the loading spinner shows), which resolves to `/<address>`; an empty field falls back to `DEFAULT_ADDRESS`. The value isn't validated, so an absolute URL such as `https://example.com` redirects off-site. Lookups are always rendered from the GET URL, which keeps results linkable.
+- `POST /` takes the form's `address` field (an empty field falls back to `DEFAULT_ADDRESS`) and redirects to `/<address>` after a 0.25s sleep, so the loading spinner shows. The redirect is built with `url_for`, which encodes the value, so a typed address like `https://example.com` can't send the visitor to another site. Lookups are always rendered from the GET URL, which keeps results linkable.
 - `GET /<address>` calls `get_ptr()`, which uses `socket.getnameinfo()` and returns either `"<address> -> <hostname>"` or a fixed error string.
 
 There's a single template, `templates/home.html`. It renders the result through `{{ page_body|safe }}`, so anything passed as `page_body` isn't escaped. Escape user-influenced input before it reaches that variable.
