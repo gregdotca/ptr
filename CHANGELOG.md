@@ -2,6 +2,10 @@
 
 ## 2026-10-11
 
+- Add `aria-label="Address"` to the address input in
+  `services/web/project/templates/home.html`. It only had a
+  placeholder, which screen readers don't reliably announce as a
+  label, so the field had no accessible name.
 - Add automatic dark mode that follows the visitor's system setting,
   with no toggle or JavaScript. The page was locked to the light
   `bumblebee` theme by `data-theme` on `<html>`.
@@ -15,7 +19,6 @@
     primary colour in dark mode (`dark:btn-primary`) instead of
     `business`'s orange accent.
   - `CLAUDE.md`: document how dark mode works.
-
 - Build Tailwind 4.3.3 and daisyUI 5.7.46 CSS at Docker build time
   instead of loading them from jsDelivr. The page used the in-browser
   Tailwind compiler, a floating `daisyui@5` tag, and a separate themes
@@ -34,7 +37,6 @@
     instead of the three CDN files.
   - `.gitignore`: ignore the generated `project/assets/app.css`.
   - `CLAUDE.md`: document the CSS build and the dev watcher.
-
 - Add `CLAUDE.md` with build, lint, and run commands, the dev/prod
   switching workflow, and an architecture overview, so future Claude
   Code sessions can work in the repo without rediscovering them.
