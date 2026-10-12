@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     command: bash -c 'gunicorn --bind 0.0.0.0:5000 manage:app'
     ports:
-      - 8101:5000
+      - 10.0.0.3:8101:5000
     restart: unless-stopped
     environment:
       - FLASK_APP=project/__init__.py
