@@ -11,10 +11,10 @@ A small Flask app ("PTR Record Lookup") that does reverse-DNS lookups. Demo: htt
 Production (the tracked setup):
 
 ```sh
-docker-compose up -d --build     # serves on 10.0.0.3:8101 -> container :5000
+docker-compose up -d --build     # serves on 127.0.0.1:8101 -> container :5000
 ```
 
-The host address comes from `PTR_BIND_ADDRESS` (environment or `.env`) and defaults to `10.0.0.3`, the demo server's address, so the live deployment needs no extra config. The compose file sets no `FLASK_*` variables: gunicorn loads `manage:app` directly, and `FLASK_ENV` no longer exists in Flask 3.
+The host address comes from `BIND_ADDRESS` (environment or a gitignored `.env` next to `docker-compose.yml`) and defaults to `127.0.0.1`. The demo server's real address stays out of the repo: iac writes a `.env` with `BIND_ADDRESS` next to the compose file on the server, and the live deployment depends on it. The compose file sets no `FLASK_*` variables: gunicorn loads `manage:app` directly, and `FLASK_ENV` no longer exists in Flask 3.
 
 The gunicorn command has `--no-control-socket` because ptr doesn't use gunicorn's `gunicornc` control tool, and the `app` user can't create its default socket in `/home/app/.gunicorn`. It runs `--workers 2 --threads 4` (gunicorn's threaded `gthread` worker), so one slow reverse lookup or the 0.25s POST delay doesn't block everyone else; with gunicorn's default single sync worker, requests were handled one at a time.
 

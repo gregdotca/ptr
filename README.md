@@ -10,14 +10,14 @@ https://ptr.greg.ca
 ## Installation
 
 - Clone the repository
-- Run `PTR_BIND_ADDRESS=127.0.0.1 docker-compose up -d --build`, replacing
-  `127.0.0.1` with the address of the network interface to serve on
-  (`0.0.0.0` for all of them)
-- Load http://127.0.0.1:8101 (or that address) in your web browser
+- Run `docker-compose up -d --build`
+- Load http://127.0.0.1:8101 in your web browser
 
-`PTR_BIND_ADDRESS` can also go in a `.env` file next to
-`docker-compose.yml`. Without it, the app binds to `10.0.0.3`, which is
-the address of the demo server and probably doesn't exist on yours.
+The app binds to `127.0.0.1` by default, so it's only reachable from the
+same machine. To serve on another network interface, set `BIND_ADDRESS`
+to its address (`0.0.0.0` for all of them), either in the shell
+(`BIND_ADDRESS=192.0.2.10 docker-compose up -d --build`) or in a `.env`
+file next to `docker-compose.yml` (`BIND_ADDRESS=192.0.2.10`).
 
 ## License
 

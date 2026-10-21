@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-21
+
+- Rename the bind address variable from `PTR_BIND_ADDRESS` to
+  `BIND_ADDRESS` and default it to `127.0.0.1` instead of `10.0.0.3`.
+  The old default put the demo server's address in a public repo, and
+  meant a fresh clone failed to start anywhere else, since Docker
+  can't publish a port on an address the host doesn't have. The
+  generic name matches the other Flask apps deployed the same way.
+  The demo server now gets its address from a `.env` file next to
+  `docker-compose.yml`, so a deploy without that file only listens on
+  `127.0.0.1`.
+  - `docker-compose.yml:10`: bind to `${BIND_ADDRESS:-127.0.0.1}`.
+  - `.gitignore:3`: ignore `.env`, so a local bind address isn't
+    committed by accident.
+  - `README.md:12-20`: the install steps use the default, and explain
+    setting `BIND_ADDRESS` in the shell or in `.env` to serve on
+    another interface.
+
 ## 2026-10-12
 
 - Upgrade Python from 3.14.7 to 3.14.8 (`python:3.14.8-slim`).
