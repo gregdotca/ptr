@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11
+
+- Link the rating in `ACR.md` to its page on aicoderating.com.
+
 ## 2026-10-21
 
 - Rename the bind address variable from `PTR_BIND_ADDRESS` to
